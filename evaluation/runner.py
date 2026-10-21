@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from evaluation.metrics import exact_match, similarity_score
+from evaluation.report import export_json, export_csv
 
 
 DATASET_PATH = Path(__file__).with_name("dataset.json")
@@ -39,7 +40,9 @@ def evaluate_dataset(dataset, actual_answers=None):
             "expected_answer": expected,
             "actual_answer": actual,
             "exact_match": exact_match(expected, actual),
-            "similarity_score": similarity_score(expected, actual),
+            "similarity_score": similarity_score(
+                expected, actual
+            ),
         })
 
     total = len(results)
@@ -64,7 +67,20 @@ def evaluate_dataset(dataset, actual_answers=None):
 def main():
     dataset = load_dataset()
     report = evaluate_dataset(dataset)
-    print(json.dumps(report, indent=2))
+
+    # Export individual evaluation results.
+    export_json(report["results"])
+    export_csv(report["results"])
+
+    # Display summary and report locations.
+    print(json.dumps({
+        "total_questions": report["total_questions"],
+        "exact_matches": report["exact_matches"],
+        "exact_match_rate": report["exact_match_rate"],
+        "average_similarity": report["average_similarity"],
+        "json_report": "reports/evaluation_report.json",
+        "csv_report": "reports/evaluation_report.csv",
+    }, indent=2))
 
 
 if __name__ == "__main__":
