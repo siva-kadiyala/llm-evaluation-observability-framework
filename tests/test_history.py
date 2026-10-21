@@ -64,7 +64,10 @@ def test_compare_latest_runs(tmp_path, monkeypatch):
 
     comparison = history.compare_latest_runs()
 
-    assert comparison["exact_match_rate_change"] == 0.3
+    assert abs(
+        comparison["exact_match_rate_change"] - 0.3
+    ) < 1e-9
+
     assert abs(
         comparison["average_similarity_change"] - 0.3
     ) < 1e-9
