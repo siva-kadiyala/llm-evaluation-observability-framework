@@ -1,12 +1,17 @@
+
+from datetime import datetime, timezone
+from typing import List
+
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from evaluation.metrics import exact_match, similarity_score
 
+
 app = FastAPI(
     title="LLM Evaluation API",
-    description="API for checking LLM response similarity.",
-    version="0.1.0",
+    description="API for evaluating LLM responses and tracking evaluation results.",
+    version="0.2.0",
 )
 
 
@@ -20,6 +25,15 @@ class EvaluationResponse(BaseModel):
     similarity_score: float
 
 
+class EvaluationRecord(EvaluationResponse):
+    expected_answer: str
+    actual_answer: str
+    timestamp: str
+
+
+evaluation_history: List[EvaluationRecord] = []
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -27,7 +41,7 @@ def health_check():
 
 @app.post("/evaluate", response_model=EvaluationResponse)
 def evaluate_response(request: EvaluationRequest):
-    return EvaluationResponse(
+    result = EvaluationResponse(
         exact_match=exact_match(
             request.expected_answer,
             request.actual_answer,
@@ -37,3 +51,26 @@ def evaluate_response(request: EvaluationRequest):
             request.actual_answer,
         ),
     )
+
+    evaluation_history.append(
+        EvaluationRecord(
+            expected_answer=request.expected_answer,
+            actual_answer=request.actual_answer,
+            exact_match=result.exact_match,
+            similarity_score=result.similarity_score,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+    )
+
+    return result
+
+
+@app.get("/evaluations", response_model=List[EvaluationRecord])
+def get_evaluations():
+    return evaluation_history
+
+
+@app.delete("/evaluations")
+def clear_evaluations():
+    evaluation_history.clear()
+    return {"message": "Evaluation history cleared"}
