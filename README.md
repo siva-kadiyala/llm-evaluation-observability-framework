@@ -219,3 +219,27 @@ GitHub: https://github.com/siva-kadiyala
 ---
 
 *This project is under active development. Features and documentation will be updated as the framework evolves.*
+## Sample Evaluation Output
+
+The framework evaluates LLM responses against expected answers and generates a report containing evaluation metrics and individual question results.
+
+Example summary:
+
+```json
+{
+  "total_questions": 10,
+  "exact_matches": 8,
+  "exact_match_rate": 0.8,
+  "average_similarity": 0.87
+}
+```
+
+The report includes:
+- Total number of questions evaluated
+- Exact-match count and rate
+- Average similarity score
+- Expected and actual answers for each question
+- Individual evaluation results
+
+Evaluation reports can be exported in JSON and CSV formats, and evaluation history can be used to compare results across runs.
+
