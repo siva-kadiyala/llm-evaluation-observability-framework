@@ -1,32 +1,37 @@
 # LLM Evaluation & Observability Framework
 
-A Python-based framework for evaluating Large Language Model (LLM) responses, measuring text similarity, and maintaining evaluation history through REST APIs.
+A Python-based framework for evaluating Large Language Model (LLM) responses, measuring text similarity, tracking evaluation history, and generating evaluation reports through REST APIs and dataset-based evaluation workflows.
 
-The project provides a foundation for testing LLM outputs, validating response quality, and building automated evaluation workflows for Generative AI applications.
+The project provides a foundation for testing LLM outputs, comparing evaluation results, and building automated quality checks for Generative AI applications.
 
 ## Project Overview
 
-LLM applications need reliable ways to compare generated responses against expected answers. This project implements an evaluation API that calculates exact-match results, measures text similarity, and records evaluation results for review.
+LLM applications need reliable ways to evaluate response quality and identify changes in model behavior. This project provides evaluation metrics, a dataset-based evaluation runner, REST API endpoints, evaluation history, and JSON/CSV report exports.
 
-The framework is being developed incrementally, with automated tests and continuous integration through GitHub Actions.
+The framework uses Python, FastAPI, Pydantic, pytest, and GitHub Actions.
 
 ## Key Features
 
-- **LLM Response Evaluation:** Compare expected answers with actual model responses.
-- **Exact Match Evaluation:** Check whether two text responses match after basic text normalization.
-- **Text Similarity Scoring:** Calculate a similarity score between expected and actual responses.
-- **Evaluation History:** Store evaluation inputs, results, and UTC timestamps in memory.
+- **LLM Response Evaluation:** Compare expected answers with actual responses.
+- **Exact Match Evaluation:** Check whether normalized text responses match.
+- **Text Similarity Scoring:** Calculate a text similarity score between expected and actual answers.
+- **Dataset-Based Evaluation:** Run evaluations against a JSON dataset containing questions and expected answers.
+- **Evaluation History:** Save evaluation results and timestamps for later review.
+- **Run Comparison:** Compare evaluation results across runs.
 - **REST API:** Expose evaluation functionality through FastAPI endpoints.
-- **Input Validation:** Validate incoming requests using Pydantic models.
-- **Automated Testing:** Run Python tests using pytest.
-- **Continuous Integration:** Execute the configured test suite through GitHub Actions.
+- **Input Validation:** Validate API requests using Pydantic models.
+- **Report Generation:** Export evaluation summaries and individual results to JSON and CSV.
+- **Automated Testing:** Test evaluation logic, API endpoints, reporting, and history functionality using pytest.
+- **Continuous Integration:** Run automated tests through GitHub Actions.
 
 ## Technology Stack
 
 - **Programming Language:** Python
 - **API Framework:** FastAPI
 - **Data Validation:** Pydantic
-- **Evaluation Logic:** Python string normalization and similarity scoring
+- **Evaluation Metrics:** Exact Match and Text Similarity
+- **Dataset Format:** JSON
+- **Reporting:** JSON and CSV
 - **Testing:** pytest
 - **HTTP Testing:** HTTPX
 - **Data Processing:** Pandas
@@ -37,36 +42,39 @@ The framework is being developed incrementally, with automated tests and continu
 
 ```text
 llm-evaluation-observability-framework/
-│
 ├── .github/
 │   └── workflows/
 │       └── tests.yml
-│
 ├── app/
 │   ├── __init__.py
 │   └── main.py
-│
 ├── evaluation/
-│   └── metrics.py
-│
+│   ├── dataset.json
+│   ├── history.py
+│   ├── metrics.py
+│   ├── report.py
+│   └── runner.py
 ├── tests/
 │   ├── test_api.py
-│   └── test_metrics.py
-│
+│   ├── test_history.py
+│   ├── test_metrics.py
+│   └── test_runner.py
 ├── .gitignore
 ├── README.md
 └── requirements.txt
 ```
 
+The `app` directory contains the REST API, `evaluation` contains the evaluation logic and reporting modules, and `tests` contains the automated test suite.
+
 ## API Endpoints
 
-The application exposes the following REST API endpoints.
+The application provides REST API endpoints for evaluating responses and managing evaluation history.
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/health` | Check application health |
-| POST | `/evaluate` | Evaluate two text responses |
-| GET | `/evaluations` | Retrieve stored evaluation results |
+| POST | `/evaluate` | Evaluate expected and actual responses |
+| GET | `/evaluations` | Retrieve stored evaluation history |
 | DELETE | `/evaluations` | Clear evaluation history |
 
 ### Health Check
@@ -77,7 +85,7 @@ The application exposes the following REST API endpoints.
 GET /health
 ```
 
-**Example response**
+Example response:
 
 ```json
 {
@@ -94,7 +102,7 @@ POST /evaluate
 Content-Type: application/json
 ```
 
-**Example request body**
+Example request:
 
 ```json
 {
@@ -103,7 +111,7 @@ Content-Type: application/json
 }
 ```
 
-**Example response**
+Example response:
 
 ```json
 {
@@ -112,7 +120,7 @@ Content-Type: application/json
 }
 ```
 
-The similarity score ranges from `0.0` to `1.0`. The exact score depends on the implemented text similarity calculation.
+The response fields shown above are illustrative. Actual response fields depend on the API implementation.
 
 ### Retrieve Evaluation History
 
@@ -122,7 +130,7 @@ The similarity score ranges from `0.0` to `1.0`. The exact score depends on the 
 GET /evaluations
 ```
 
-Returns the evaluation records stored during the current application process, including the expected answer, actual answer, evaluation results, and timestamp.
+Returns evaluation records stored by the API, subject to the application's current storage implementation.
 
 ### Clear Evaluation History
 
@@ -132,7 +140,36 @@ Returns the evaluation records stored during the current application process, in
 DELETE /evaluations
 ```
 
-Clears the in-memory evaluation history.
+Clears evaluation history if supported by the running API implementation.
+
+## Dataset Evaluation
+
+The framework includes a JSON dataset containing questions, categories, and expected answers.
+
+The evaluation runner processes the dataset and calculates metrics for each question, including exact-match results and text similarity scores. Actual answers can also be supplied to evaluate responses from an LLM application.
+
+The runner produces an evaluation summary containing:
+
+- Total number of questions
+- Number of exact matches
+- Exact-match rate
+- Average similarity score
+- Individual question results
+
+## Sample Evaluation Output
+
+The following is an illustrative example, not a verified result from an actual execution.
+
+```json
+{
+  "total_questions": 10,
+  "exact_matches": 8,
+  "exact_match_rate": 0.8,
+  "average_similarity": 0.87
+}
+```
+
+Evaluation reports can be exported in JSON and CSV formats. Saved evaluation history can be used to review results and compare runs.
 
 ## Getting Started
 
@@ -155,23 +192,23 @@ cd llm-evaluation-observability-framework
 python -m pip install -r requirements.txt
 ```
 
-### 3. Start the Application
+### 3. Start the API
 
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
-The API will start locally at:
+The API should be available locally at:
 
 `http://127.0.0.1:8000`
 
-### 4. Open Interactive API Documentation
+### 4. Open API Documentation
 
 Open the following URL in your browser:
 
 `http://127.0.0.1:8000/docs`
 
-Use the Swagger UI to explore the endpoints, submit evaluation requests, and review their responses.
+Use the interactive Swagger UI to explore and test the available API endpoints.
 
 ### 5. Run Automated Tests
 
@@ -179,36 +216,45 @@ Use the Swagger UI to explore the endpoints, submit evaluation requests, and rev
 python -m pytest -v
 ```
 
-The test suite covers the evaluation metrics and API functionality implemented in the repository.
+The tests validate the implemented evaluation metrics, API endpoints, dataset runner, reporting, and history functionality.
+
+### 6. Run the Dataset Evaluation
+
+From the repository root, run:
+
+```bash
+python -m evaluation.runner
+```
+
+The runner loads the dataset, calculates evaluation metrics, saves evaluation history, exports reports, and prints the evaluation summary, according to the implemented configuration.
 
 ## Continuous Integration
 
-GitHub Actions is configured to run the Python test workflow when changes are pushed to the configured branch or a pull request is opened.
+GitHub Actions runs the configured Python test workflow when repository changes trigger the workflow.
 
-The workflow checks the configured automated tests and helps identify issues before additional changes are introduced.
+The workflow helps detect test failures and maintain the project as new evaluation features are added.
 
 ## Current Limitations
 
-- Evaluation history is stored in memory and is lost when the application restarts.
-- Text similarity scoring is a basic text-based metric, not a semantic embedding-based evaluation.
-- Token usage, model latency, and production monitoring are not yet implemented.
-- Integration with external LLM providers is not yet implemented.
-- Persistent storage and historical reporting are planned enhancements.
+- Evaluation history may be stored in memory or another configured format; persistence depends on the implementation.
+- Text similarity scoring is a basic text-based metric, not necessarily semantic similarity.
+- External LLM provider integrations are not yet documented as implemented.
+- Token usage, model latency, and production-grade observability require additional implementation.
+- The sample evaluation values above are illustrative and should not be treated as benchmark results.
 
 ## Planned Enhancements
 
 - Add semantic similarity evaluation using embedding models.
-- Integrate multiple LLM providers.
-- Track latency, token usage, and evaluation errors.
-- Support repeatable evaluation datasets and prompt comparisons.
-- Generate evaluation reports in JSON and CSV formats.
+- Integrate external LLM providers for live response evaluation.
+- Track response latency, token usage, and evaluation errors.
 - Add persistent storage for evaluation history.
+- Support prompt-version comparisons and repeatable benchmark datasets.
 - Introduce Docker-based deployment.
-- Expand automated tests and evaluation metrics.
+- Expand evaluation metrics and automated tests.
 
 ## Project Goals
 
-The goal is to develop a practical framework for testing LLM application outputs, tracking evaluation results, and building a foundation for Generative AI quality assurance and observability.
+The goal is to develop a practical framework for evaluating LLM application outputs, tracking evaluation results, comparing runs, and supporting quality assurance for Generative AI applications.
 
 ## Author
 
@@ -219,53 +265,3 @@ GitHub: https://github.com/siva-kadiyala
 ---
 
 *This project is under active development. Features and documentation will be updated as the framework evolves.*
-## Sample Evaluation Output
-
-The framework evaluates LLM responses against expected answers and generates a report containing evaluation metrics and individual question results.
-
-Example summary:
-
-```json
-{
-  "total_questions": 10,
-  "exact_matches": 8,
-  "exact_match_rate": 0.8,
-  "average_similarity": 0.87
-}
-```
-
-The report includes:
-- Total number of questions evaluated
-- Exact-match count and rate
-- Average similarity score
-- Expected and actual answers for each question
-- Individual evaluation results
-
-Evaluation reports can be exported in JSON and CSV formats, and evaluation history can be used to compare results across runs.
-## Project Structure
-
-```text
-llm-evaluation-observability-framework/
-├── app/
-│   └── main.py
-├── evaluation/
-│   ├── dataset.json
-│   ├── metrics.py
-│   ├── runner.py
-│   ├── report.py
-│   └── history.py
-├── tests/
-│   ├── test_api.py
-│   ├── test_history.py
-│   ├── test_metrics.py
-│   └── test_runner.py
-├── .github/
-│   └── workflows/
-│       └── tests.yml
-├── requirements.txt
-└── README.md
-```
-
-The project separates API endpoints, evaluation logic, reporting, evaluation history, automated tests, and CI workflows into individual modules.
-
-
