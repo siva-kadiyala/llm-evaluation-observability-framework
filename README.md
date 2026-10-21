@@ -242,4 +242,30 @@ The report includes:
 - Individual evaluation results
 
 Evaluation reports can be exported in JSON and CSV formats, and evaluation history can be used to compare results across runs.
+## Project Structure
+
+```text
+llm-evaluation-observability-framework/
+├── app/
+│   └── main.py
+├── evaluation/
+│   ├── dataset.json
+│   ├── metrics.py
+│   ├── runner.py
+│   ├── report.py
+│   └── history.py
+├── tests/
+│   ├── test_api.py
+│   ├── test_history.py
+│   ├── test_metrics.py
+│   └── test_runner.py
+├── .github/
+│   └── workflows/
+│       └── tests.yml
+├── requirements.txt
+└── README.md
+```
+
+The project separates API endpoints, evaluation logic, reporting, evaluation history, automated tests, and CI workflows into individual modules.
+
 
